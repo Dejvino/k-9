@@ -11,6 +11,8 @@ import com.fsck.k9.Account;
 import com.fsck.k9.DI;
 import com.fsck.k9.Identity;
 import com.fsck.k9.Preferences;
+import com.fsck.k9.helper.IdentityHelper;
+import com.fsck.k9.mail.Message;
 import com.fsck.k9.ui.R;
 import com.fsck.k9.ui.identity.IdentityFormatter;
 
@@ -31,7 +33,7 @@ public class IdentityAdapter extends BaseAdapter {
     private LayoutInflater mLayoutInflater;
     private List<Object> mItems;
 
-    public IdentityAdapter(Context context) {
+    public IdentityAdapter(Context context, Message message) {
         mLayoutInflater = (LayoutInflater) context.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
 
@@ -40,7 +42,7 @@ public class IdentityAdapter extends BaseAdapter {
         Collection<Account> accounts = prefs.getAccounts();
         for (Account account : accounts) {
             items.add(account);
-            List<Identity> identities = account.getIdentities();
+            List<Identity> identities = IdentityHelper.getIdentitiesForMessage(account, message);
             for (Identity identity : identities) {
                 items.add(new IdentityContainer(identity, account));
             }

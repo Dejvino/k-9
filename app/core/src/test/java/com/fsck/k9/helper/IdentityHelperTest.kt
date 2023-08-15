@@ -92,6 +92,38 @@ class IdentityHelperTest : RobolectricTest() {
     }
 
     @Test
+    fun getRecipientIdentityFromMessage_withDomainIdentityAddresses_prefersExactMatch() {
+        val message = messageWithRecipients(
+            RecipientType.TO to "unrelated1@example.net",
+            RecipientType.CC to IDENTITY_6_ADDRESS,
+            RecipientType.X_ORIGINAL_TO to "unrelated3@example.net",
+            RecipientType.DELIVERED_TO to "unrelated4@example.net",
+            RecipientType.X_ENVELOPE_TO to "unrelated5@example.net",
+        )
+
+        val identity = IdentityHelper.getRecipientIdentityFromMessage(account, message)
+
+        assertThat(identity.email).isEqualTo(IDENTITY_6_ADDRESS)
+    }
+
+    @Test
+    fun getRecipientIdentityFromMessage_withDomainIdentityAddresses_returnsFirstMatchedAddress() {
+        val domainMatchingAddress = Address("related1@example.net", "Sir Related")
+        val message = messageWithRecipients(
+            RecipientType.TO to "unrelated1@example.org",
+            RecipientType.CC to "unrelated2@example.org",
+            RecipientType.X_ORIGINAL_TO to domainMatchingAddress.toEncodedString(),
+            RecipientType.DELIVERED_TO to "related2@example.net",
+            RecipientType.X_ENVELOPE_TO to "related3@example.net",
+        )
+
+        val identity = IdentityHelper.getRecipientIdentityFromMessage(account, message)
+
+        assertThat(identity.email).isEqualTo(domainMatchingAddress.address)
+        assertThat(identity.name).isEqualTo(domainMatchingAddress.personal)
+    }
+
+    @Test
     fun getRecipientIdentityFromMessage_withoutAnyIdentityAddresses_returnsFirstIdentity() {
         val message = messageWithRecipients(
             RecipientType.TO to "unrelated1@example.org",
@@ -124,6 +156,8 @@ class IdentityHelperTest : RobolectricTest() {
                 newIdentity("Identity 3", IDENTITY_3_ADDRESS),
                 newIdentity("Identity 4", IDENTITY_4_ADDRESS),
                 newIdentity("Identity 5", IDENTITY_5_ADDRESS),
+                newIdentity("Identity 6", IDENTITY_6_ADDRESS),
+                newIdentity("Domain Identity", DOMAIN_IDENTITY_ADDRESS),
             ),
         )
     }
@@ -158,5 +192,7 @@ class IdentityHelperTest : RobolectricTest() {
         const val IDENTITY_3_ADDRESS = "identity3@example.org"
         const val IDENTITY_4_ADDRESS = "identity4@example.org"
         const val IDENTITY_5_ADDRESS = "identity5@example.org"
+        const val IDENTITY_6_ADDRESS = "identity6@example.net"
+        const val DOMAIN_IDENTITY_ADDRESS = "*@example.net"
     }
 }

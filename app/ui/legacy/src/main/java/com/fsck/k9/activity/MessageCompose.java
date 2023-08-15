@@ -1202,7 +1202,7 @@ public class MessageCompose extends K9Activity implements OnClickListener,
                 Context context = new ContextThemeWrapper(this, dialogThemeResourceId);
                 builder = new AlertDialog.Builder(context);
                 builder.setTitle(R.string.send_as);
-                final IdentityAdapter adapter = new IdentityAdapter(context);
+                final IdentityAdapter adapter = new IdentityAdapter(context, currentMessageViewInfo.message);
                 builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

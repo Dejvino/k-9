@@ -543,6 +543,17 @@ class Account(override val uuid: String) : BaseAccount {
         }
     }
 
+    @Synchronized
+    fun findDomainWildcardIdentity(address: Address): Identity? {
+        val domainIdentityPrefix = "*@"
+        val isDomainIdentity = { email: String -> email.startsWith(domainIdentityPrefix) }
+        val addressMatchesDomain = { email: String -> address.hostname == email.substring(domainIdentityPrefix.length) }
+
+        return identities.find { identity ->
+            identity.email != null && isDomainIdentity(identity.email) && addressMatchesDomain(identity.email)
+        }?.copy(name = address.personal, email = address.address)
+    }
+
     val earliestPollDate: Date?
         get() {
             val age = maximumPolledMessageAge.takeIf { it >= 0 } ?: return null

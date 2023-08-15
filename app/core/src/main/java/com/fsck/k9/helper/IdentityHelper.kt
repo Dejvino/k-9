@@ -29,12 +29,29 @@ object IdentityHelper {
      */
     @JvmStatic
     fun getRecipientIdentityFromMessage(account: Account, message: Message): Identity {
-        val recipient: Identity? = RECIPIENT_TYPES.asSequence()
+        val allRecipients = RECIPIENT_TYPES.asSequence()
             .flatMap { recipientType -> message.getRecipients(recipientType).asSequence() }
-            .map { address -> account.findIdentity(address) }
+        val exactRecipients = allRecipients.map { address -> account.findIdentity(address) }
+        val domainRecipients = allRecipients.map { address -> account.findDomainWildcardIdentity(address) }
+        val recipient: Identity? = exactRecipients.plus(domainRecipients)
             .filterNotNull()
             .firstOrNull()
 
         return recipient ?: account.getIdentity(0)
     }
+
+    @JvmStatic
+    fun getIdentitiesForMessage(account: Account, message: Message): List<Identity> {
+        /*if (message == null) {
+            return listOf()
+        }*/
+        val wildcardIdentities = RECIPIENT_TYPES.asSequence()
+            .flatMap { recipientType -> message.getRecipients(recipientType).asSequence() }
+            .map { address -> account.findDomainWildcardIdentity(address) }
+            .filterNotNull()
+        return account.identities.filter { identity: Identity -> !identity.isDomainWildcard() }
+            .plus(wildcardIdentities)
+    }
 }
+
+fun Identity.isDomainWildcard() = email?.startsWith("*@") == true
